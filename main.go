@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"strings"
+	"time"
 )
 
 const gridSize = 30
@@ -177,13 +178,30 @@ func checkFleasCount(g *Grid) {
 	}
 }
 
-func main() {
+func runSimulation() uint {
 	var g = NewGrid()
-	g.Print(true)
+	//g.Print(true)
 
 	for rb := 1; rb <= ringBellsCount; rb++ {
-		checkFleasCount(&g)
+		//checkFleasCount(&g)
 		ringBell(&g)
-		g.Print(false)
+		//g.Print(false)
 	}
+
+	return countUnoccupiedFields(&g)
+}
+
+func main() {
+	const simulationsCount = 10000
+	var sum uint
+
+	var start = time.Now()
+
+	for i := 1; i <= simulationsCount; i++ {
+		sum += runSimulation()
+	}
+
+	var elapsedTime = time.Now().Sub(start)
+	fmt.Printf("Average count of unoccupied fields: %f\n", float32(sum)/float32(simulationsCount))
+	fmt.Printf("Elapsed time: %s", elapsedTime)
 }
