@@ -9,6 +9,7 @@ import (
 
 const gridSize = 30
 const ringBellsCount = 50
+const simulationsCount = 10000
 
 type GridSquare struct {
 	Row             uint
@@ -191,17 +192,53 @@ func runSimulation() uint {
 	return countUnoccupiedFields(&g)
 }
 
-func main() {
-	const simulationsCount = 10000
-	var sum uint
+func worker(jobs <-chan uint, results chan<- uint) {
+	for range jobs {
+		results <- runSimulation()
+	}
+}
 
+func runParallelSimulation(simulationsCount uint) {
 	var start = time.Now()
 
-	for i := 1; i <= simulationsCount; i++ {
+	const workersCount = 128
+	jobs := make(chan uint, simulationsCount)
+	results := make(chan uint, simulationsCount)
+
+	for w := uint(1); w <= workersCount; w++ {
+		go worker(jobs, results)
+	}
+
+	for j := uint(1); j <= simulationsCount; j++ {
+		jobs <- j
+	}
+	close(jobs)
+
+	var sum uint
+
+	for a := uint(1); a <= simulationsCount; a++ {
+		sum += <-results
+	}
+
+	var elapsedTime = time.Now().Sub(start)
+	fmt.Printf("Average count of unoccupied fields: %f\n", float32(sum)/float32(simulationsCount))
+	fmt.Printf("Elapsed time: %s", elapsedTime)
+}
+
+func runSequentialSimulation(simulationsCount uint) {
+	var start = time.Now()
+	var sum uint
+
+	for i := uint(1); i <= simulationsCount; i++ {
 		sum += runSimulation()
 	}
 
 	var elapsedTime = time.Now().Sub(start)
 	fmt.Printf("Average count of unoccupied fields: %f\n", float32(sum)/float32(simulationsCount))
 	fmt.Printf("Elapsed time: %s", elapsedTime)
+}
+
+func main() {
+	//runSequentialSimulation(simulationsCount)
+	runParallelSimulation(simulationsCount)
 }
