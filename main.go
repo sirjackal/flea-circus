@@ -179,7 +179,7 @@ func checkFleasCount(g *Grid) {
 	}
 }
 
-func runSimulation() uint {
+func runSingleSimulation() uint {
 	var g = NewGrid()
 	//g.Print(true)
 
@@ -194,7 +194,7 @@ func runSimulation() uint {
 
 func worker(jobs <-chan uint, results chan<- uint) {
 	for range jobs {
-		results <- runSimulation()
+		results <- runSingleSimulation()
 	}
 }
 
@@ -230,7 +230,7 @@ func runSequentialSimulation(simulationsCount uint) {
 	var sum uint
 
 	for i := uint(1); i <= simulationsCount; i++ {
-		sum += runSimulation()
+		sum += runSingleSimulation()
 	}
 
 	var elapsedTime = time.Now().Sub(start)
